@@ -9,7 +9,10 @@ import Visitor from "../models/Visitor.js";
 const nodemailer = require("nodemailer");
 const router = express.Router();
 const crypto = require('crypto');
-
+const Detail = require('../models/Details')
+const Food = require('../models/Food')
+const Item = require('../models/Items')
+const Plan = require('../models/Plan')
 
 // Create a nodemailer transporter
 const transporter = nodemailer.createTransport({
@@ -208,9 +211,10 @@ router.post("/signup", async (req, res) => {
                            food: newUser.food,
                            number : newUser.number,
                            plan : newUser.plan,
-                       },
-                       accessToken,
-                       refreshToken
+                       }
+                       //,
+                       //accessToken,
+                       //refreshToken
                    });
   } catch (err) {
     console.log("Error occurred", err);
