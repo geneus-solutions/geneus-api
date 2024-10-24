@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const planSchema = new mongoose.Schema({
     userId: {
@@ -49,4 +49,4 @@ planSchema.pre('save', function(next) {
 
 const Plan = mongoose.model('Plan', planSchema);
 
-module.exports = Plan;
+export default Plan;

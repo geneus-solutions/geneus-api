@@ -1,5 +1,5 @@
 // Import Mongoose
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 // Define User Schema
 const userSchema = new mongoose.Schema({
@@ -22,8 +22,7 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-// Create User Model
 const NewUser = mongoose.model('NewUser', userSchema);
 
-// Export User Model
-module.exports = NewUser;
+
+export default NewUser;

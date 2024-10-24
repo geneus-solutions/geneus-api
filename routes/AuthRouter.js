@@ -5,20 +5,20 @@ import User from "../models/User.js";
 import Token from "../models/Token.js";
 import Enquiry from "../models/Enquiry.js";
 import Visitor from "../models/Visitor.js";
-
-const nodemailer = require("nodemailer");
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 const router = express.Router();
-const crypto = require('crypto');
+
 
 
 // Create a nodemailer transporter
 const transporter = nodemailer.createTransport({
-  // Configure the email provider settings
-  // For example, for Gmail:
   service: "Gmail",
+ secure : true,
+ port: 465,  
   auth: {
-    user: process.env.email,
-    pass: process.env.password,
+    user: process.env.toAdmin,
+    pass: process.env.Email_Pass,
   },
 });
 

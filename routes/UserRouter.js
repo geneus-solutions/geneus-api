@@ -1,10 +1,11 @@
 import express from 'express';
-import jwt, { verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+const { verify } = jwt;
 import Token from "../models/Token.js";
 import dotenv from 'dotenv';
-import NewUser from "../models/NewUser";
+import NewUser from "../models/newUser.js";
 dotenv.config();
-const nodemailer = require("nodemailer");
+import nodemailer from "nodemailer"
 const router = express.Router();
 
 // Create a nodemailer transporter

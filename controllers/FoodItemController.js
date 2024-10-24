@@ -1,4 +1,4 @@
-const Item = require('../models/Items')
+import Item from '../models/FoodItems.js'
 
 const createItem = async (req, res) => {
     try {
@@ -19,7 +19,7 @@ const getItems = async (req, res) => {
     }
 }
 
-module.exports = {
+export  {
     createItem,
     getItems
 }

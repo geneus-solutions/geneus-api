@@ -1,6 +1,7 @@
-const Detail = require('../models/Details')
-const User = require('../models/User')
-
+import User from "../models/User.js";
+import Details from "../models/FoodDetails.js";
+import { configDotenv } from 'dotenv';
+configDotenv()
 const updateDetail = async (req, res) => {
     const { user, goal, activityLevel, gender, dateOfBirth, country, height, weight, goalWeight } = req.body;
     console.log(req.body)
@@ -50,12 +51,12 @@ const birthDate = new Date(dateOfBirth);
         const tdee = bmr * activityFactor;
         const calories = Math.round(tdee)
         console.log(calories)
-        const detailExists = await Detail.findOne({user})
+        const detailExists = await Details.findOne({user})
         if(!detailExists){
-            const newDetail = new Detail({user, goal, activityLevel, gender, dateOfBirth, country, height, weight, goal, caloriegoal : calories})
+            const newDetail = new Details({user, goal, activityLevel, gender, dateOfBirth, country, height, weight, goal, caloriegoal : calories})
             await newDetail.save()
         }
-        const updatedDetail = await Detail.findOneAndUpdate({user}, {goal, activityLevel, gender, dateOfBirth, country, height, weight, caloriegoal : calories}, {new: true})
+        const updatedDetail = await Details.findOneAndUpdate({user}, {goal, activityLevel, gender, dateOfBirth, country, height, weight, caloriegoal : calories}, {new: true})
         res.status(200).json(updatedDetail)
             }catch(error){
                 res.status(500).json({message: error.message})
@@ -64,4 +65,6 @@ const birthDate = new Date(dateOfBirth);
 
 
 
-module.exports = {updateDetail}
+export {
+    updateDetail
+}
