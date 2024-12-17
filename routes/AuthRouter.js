@@ -8,10 +8,11 @@ import Visitor from "../models/Visitor.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import {logut, contact, loginUser,  signup, enquiry, forgotPassword, resetPassword} from '../controllers/UserController.js'
+import { Auth } from '../controllers/AuthController.js';
 const router = express.Router();
 
 
-router.post("/logout", logut);
+router.post("/logout",Auth, logut);
 
 router.post("/contact", contact);
 

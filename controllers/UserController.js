@@ -168,9 +168,15 @@ const getUser = async (req, res) => {
 
 const logut = async (req, res) => {
   try {
-    const token = req.cookies.token;
-    await Token.deleteOne({ token });
-    res.clearCookie("token");
+    // console.log("Logout route called : ",req.cookies);
+    const refreshToken = req.cookies.refreshToken;
+    console.log("Refresh Token:", refreshToken);
+    // const refreshToken = await Token.deleteOne({ refreshToken });
+    // delete the refresh token from the database
+    const updatedData = await User.findOneAndUpdate({refreshToken},{refreshToken:null},{new:true})
+
+    console.log("Refresh Token Deleted:", updatedData);
+    res.clearCookie("refreshToken");
     return res.status(204).json({ message: "Logout successful!" });
   } catch (err) {
     return res.status(400).json({ error: err.message });

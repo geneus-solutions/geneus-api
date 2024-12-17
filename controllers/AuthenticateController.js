@@ -4,7 +4,6 @@ const authenticate = async(req,res,next)=>{
     try {
 
         const {userId} = req.user;
-        console.log('req.user : ', req.user);
         const foundUser = await User.findOne({_id:userId});
 
         if(!foundUser) return res.status(404).json({success:false,message:'Invalid username or password'});

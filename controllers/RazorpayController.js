@@ -44,6 +44,7 @@ const postRazorpay =  async (req, res) => {
         key_id: process.env.RAZORPAY_ID,
         key_secret: process.env.RAZORPAY_SECRET,
       });
+      console.log('rezorpay',razorpay)
   
       const response = await razorpay.orders.create(options);
       console.log(response);
