@@ -1,10 +1,15 @@
-import stockList from "../data/stockList.json" assert { type: "json" };
+import { readFileSync } from "fs";
+
 import catchAsync from "../utilities/catchAsync.js";
 import ApiError from "../utilities/ApiError.js";
 import { createStock } from "../services/stockServices/createStockService.js";
 import ApiResponse from "../utilities/ApiResponse.js";
 import { updateUserStock } from "../services/stockServices/updateStockService.js";
 import { getUserStocksService } from "../services/stockServices/getUserStocksService.js";
+
+const stockList = JSON.parse(
+  readFileSync(new URL("../data/stockList.json", import.meta.url))
+);
 
 const getStocksName = async (req, res) => {
   try {
@@ -14,7 +19,6 @@ const getStocksName = async (req, res) => {
     return res.status(500).json({ error: "Failed to fetch stock symbols" });
   }
 };
-
 
 const addNewStock = catchAsync(async (req, res) => {
   const { name, shares, buyPrice, purchaseDate } = req.body;
@@ -55,11 +59,13 @@ const updateStock = catchAsync(async (req, res) => {
 });
 
 const getUserStocks = catchAsync(async (req, res) => {
-    const { userId } = req.params;
-    console.log('this is user stock', userId)
-    const stocks = await getUserStocksService(userId);
-    console.log(stocks, 'this is users Stocks')
-    return res.status(200).json(new ApiResponse(200, stocks, "User Stocks Fetched"));
+  const { userId } = req.params;
+  console.log("this is user stock", userId);
+  const stocks = await getUserStocksService(userId);
+  console.log(stocks, "this is users Stocks");
+  return res
+    .status(200)
+    .json(new ApiResponse(200, stocks, "User Stocks Fetched"));
 });
 
 export { getStocksName, addNewStock, getUserStocks, updateStock };
