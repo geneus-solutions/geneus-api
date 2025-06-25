@@ -13,9 +13,10 @@ const stockList = JSON.parse(
 
 const getStocksName = async (req, res) => {
   try {
+    console.log('In Line number 16 geting stocks names:-', stockList)
     return res.status(200).json(stockList);
   } catch (error) {
-    console.error(error);
+    console.error('Error occuord during get stock name', error);
     return res.status(500).json({ error: "Failed to fetch stock symbols" });
   }
 };
