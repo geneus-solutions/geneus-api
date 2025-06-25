@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+// import { readFileSync } from "fs";
 
 import catchAsync from "../utilities/catchAsync.js";
 import ApiError from "../utilities/ApiError.js";
@@ -7,14 +7,14 @@ import ApiResponse from "../utilities/ApiResponse.js";
 import { updateUserStock } from "../services/stockServices/updateStockService.js";
 import { getUserStocksService } from "../services/stockServices/getUserStocksService.js";
 
-const stockList = JSON.parse(
-  readFileSync(new URL("../data/stockList.json", import.meta.url))
-);
+// const stockList = JSON.parse(
+//   readFileSync(new URL("../data/stockList.json", import.meta.url))
+// );
 
 const getStocksName = async (req, res) => {
   try {
-    console.log('In Line number 16 geting stocks names:-', stockList)
-    return res.status(200).json(stockList);
+    console.log('In Line number 16 geting stocks names:-')
+    return res.status(200).json({data: "this is testing data"});
   } catch (error) {
     console.error('Error occuord during get stock name', error);
     return res.status(500).json({ error: "Failed to fetch stock symbols" });
@@ -23,6 +23,7 @@ const getStocksName = async (req, res) => {
 
 const addNewStock = catchAsync(async (req, res) => {
   const { name, shares, buyPrice, purchaseDate } = req.body;
+  console.log('this is names on adding the stock', req.body);
   const userId = req.user.userId;
   if (!name || !shares || !buyPrice || !purchaseDate)
     return new ApiError(400, "Please provide all required fields");
