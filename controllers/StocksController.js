@@ -1,11 +1,10 @@
-// import { readFileSync } from "fs";
-
 import catchAsync from "../utilities/catchAsync.js";
 import ApiError from "../utilities/ApiError.js";
 import { createStock } from "../services/stockServices/createStockService.js";
 import ApiResponse from "../utilities/ApiResponse.js";
 import { updateUserStock } from "../services/stockServices/updateStockService.js";
 import { getUserStocksService } from "../services/stockServices/getUserStocksService.js";
+import { getStocksSymbols } from "../services/stockServices/getStockSymbol.js";
 
 // const stockList = JSON.parse(
 //   readFileSync(new URL("../data/stockList.json", import.meta.url))
@@ -13,10 +12,11 @@ import { getUserStocksService } from "../services/stockServices/getUserStocksSer
 
 const getStocksName = async (req, res) => {
   try {
-    console.log('In Line number 16 geting stocks names:-')
-    return res.status(200).json({data: "this is testing data"});
+    const stockList = await getStocksSymbols();
+    console.log('this is all stocks symbols', stockList)
+    return res.status(200).json(stockList);
   } catch (error) {
-    console.error('Error occuord during get stock name', error);
+    console.error(error);
     return res.status(500).json({ error: "Failed to fetch stock symbols" });
   }
 };
