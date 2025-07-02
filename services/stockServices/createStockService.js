@@ -1,4 +1,3 @@
-import { createTargetPercentage } from "../../controllers/StocksController.js";
 import Stock from "../../models/Stocks.js";
 import { createTargetPercentageDocument } from "./createTargetPercentageService.js";
 
