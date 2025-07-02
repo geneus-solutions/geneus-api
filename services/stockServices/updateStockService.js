@@ -3,27 +3,27 @@ import ApiError from "../../utilities/ApiError.js";
 import { fetchStockCurrentPrice } from "../../utilities/FetchStockCurrentPrice.js";
 
 
-export const updateUserStock = async ({ id, name, shares, buyPrice, purchaseDate }) => {
-    console.log('this is the data of update stock', name, id)
-  const currentPrice = await fetchStockCurrentPrice(name);
-  console.log('this is currentPrice', currentPrice)
-  if (!currentPrice) {
-    throw new ApiError(404, "Unable to fetch current stock price");
-  }
+export const updateUserStock = async ({ id, purchasedShares, buyPrice, purchaseDate, targetPercentage }) => {
+    console.log('this is the data of update stock', id)
+  // const currentPrice = await fetchStockCurrentPrice(name);
+  // console.log('this is currentPrice', currentPrice)
+  // if (!currentPrice) {
+  //   throw new ApiError(404, "Unable to fetch current stock price");
+  // }
 
-  const profit = ((currentPrice - buyPrice) * shares).toFixed(2);
-  const profitPercentage = (((currentPrice - buyPrice) / buyPrice) * 100).toFixed(2);
+  // const profit = ((currentPrice - buyPrice) * shares).toFixed(2);
+  // const profitPercentage = (((currentPrice - buyPrice) / buyPrice) * 100).toFixed(2);
 
   const updatedStock = await Stock.findOneAndUpdate(
     { _id: id },
     {
-      stockName: name,
-      purchasedShares: shares,
+      purchasedShares: purchasedShares,
       buyPrice,
-      currentPrice,
-      profit,
-      profitPercentage,
+      // currentPrice,
+      // profit,
+      // profitPercentage,
       purchaseDate,
+      // targetPercentage
     },
     {
       new: true,
