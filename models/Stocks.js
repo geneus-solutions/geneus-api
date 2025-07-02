@@ -15,24 +15,15 @@ const stocksSchema = mongoose.Schema({
         require: true,
         trim: true,
     },
+    purchaseDate: {
+        type: Date,
+        require: true
+    },
     buyPrice: {
         type: Number,
         require: true,
         trim: true,
     },
-    currentPrice: {
-        type: String,
-    },
-    profit: {
-        type: String,
-    },
-    profitPercentage: {
-        type: String,
-    },
-    purchaseDate: {
-        type: String,
-        require: true
-    }
 }, {timestamps: true});
 
 const Stock = new mongoose.model('Stock', stocksSchema);
