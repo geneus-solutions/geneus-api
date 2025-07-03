@@ -55,7 +55,6 @@ export const getAllUserStock = async () => {
             userId,
             stockName,
             profitPercentage,
-            targetPercentage: target.targetPercentage,
             totalShares: totalShares,
             totalInvestment: totalInvestment
           });
