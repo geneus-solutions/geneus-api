@@ -8,8 +8,8 @@ eventBus.on("sendTargetProfitMail", async ({ userId, stockName, profitPercentage
     const user = await User.findById({_id: userId});
     if (!user?.email) return;
     await sendEmail(
-            process.env.email,
             process.env.toAdmin,
+            process.env.email,
             `🎯 Target Reached for ${stockName}`,
             `Hi ${user.name},Your stock ${stockName} has reached a profit of ${profitPercentage.toFixed(2)}%, exceeding your target of ${targetPercentage}%!You might want to review your investment now. - Stock Tracker,
             Total Shares ${totalShares} your invested Amount is ${totalInvestment}`,);
