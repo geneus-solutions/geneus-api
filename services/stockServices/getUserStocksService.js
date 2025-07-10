@@ -14,13 +14,13 @@ export const getUserStocksService = async (id, stockname) => {
     currentPrice = response.price;
   }
 
+  console.log('this is stocks', stocks);
   const enrichedStocks = stocks.map((stock) => {
     const purchasedShares = stock.purchasedShares;
     const buyPrice = stock.buyPrice;
-    const investedAmount = buyPrice;
     const totalCurrentPrice = currentPrice * purchasedShares;
-    const profit = totalCurrentPrice - investedAmount;
-    const profitPercentage = ((profit / investedAmount) * 100).toFixed(2);
+    const profit = ((currentPrice - buyPrice) * purchasedShares).toFixed(2);
+    const profitPercentage = ((profit / (buyPrice * purchasedShares)) * 100).toFixed(2);
 
     return {
       ...stock.toObject(),
@@ -47,16 +47,20 @@ export const getUserTotalStock = async (userId) => {
       $group: {
         _id: "$stockName",
         totalShares: { $sum: "$purchasedShares" },
-        totalBuyPrice: { $sum: "$buyPrice" },
+        totalBuyPrice:{
+          $sum: { $multiply: ["$buyPrice", "$purchasedShares"] },
+        },
         lastPurchaseDate: { $max: "$purchaseDate" },
       },
     },
   ]);
 
+  console.log('the stockss slflds------------>', stocksStats)
   // Step 2: Enrich with live price and total value
   let totalShares = 0;
   let totalInvested = 0;
   let totalCurrentValue = 0;
+
   const updateStats = await Promise.allSettled(
     stocksStats.map(async (stock) => {
       const response = await fetchStockCurrentPrice(stock?._id); // Fetch from external API
