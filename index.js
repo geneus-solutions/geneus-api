@@ -67,7 +67,7 @@ for (const file of routes) {
 }
 
 
-cron.schedule('30 9,12,17 * * *', async () => {
+cron.schedule('0 4,7,12 * * *', async () => {
   const userStocks = await getAllUserStock();
   // console.log('this is userStocks', userStocks)
   // console.log("Profit notification job executed.");
