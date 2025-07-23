@@ -6,6 +6,7 @@ import { updateUserStock } from "../services/stockServices/updateStockService.js
 import { getUserStocksService, getUserTotalStock } from "../services/stockServices/getUserStocksService.js";
 import { getStocksSymbols } from "../services/stockServices/getStockSymbol.js";
 import { createTargetPercentageDocument, getTargetPercentageDocument, updateStockEmailDocument, updateTargetPercentageDocument } from "../services/stockServices/createTargetPercentageService.js";
+import { deleteAllStockWithSingleName, deleteStockService } from "../services/stockServices/deleteStockService.js";
 
 // const stockList = JSON.parse(
 //   readFileSync(new URL("../data/stockList.json", import.meta.url))
@@ -119,6 +120,25 @@ const getTargetPercentage = catchAsync(async(req, res) => {
   }
   console.log('thi sis response', response)
   return res.status(200).json(new ApiResponse(200, response, "Target Percetage Fetched"));
+});
+
+const deleteSingleStock = catchAsync(async(req, res)=>{
+  const {stockId, userId} = req.params;
+  const response = await deleteStockService(stockId, userId);
+  if(!response)
+    throw new ApiError(404, "Stock not Found to delete");
+  return res.status(200).json(new ApiResponse(200, response, "Stock deleted Succesfully"))
 })
 
-export { getStocksName, addNewStock, getUserStocks, updateStock, getUserStocksDetails, createTargetPercentage, getTargetPercentage, updateTargetPercentage };
+const deleteAllStock = catchAsync(async(req, res)=> {
+  const {userId, stockName} = req.body;
+  console.log('this is rq.boyd', req.body)
+  const response = await deleteAllStockWithSingleName(stockName, userId)
+   if(!response)
+    throw new ApiError(404, "Stock not Found to delete");
+  return res.status(200).json(new ApiResponse(200, response, "Stock deleted Succesfully"))
+})
+
+
+
+export { getStocksName, addNewStock, getUserStocks, updateStock, getUserStocksDetails, createTargetPercentage, getTargetPercentage, updateTargetPercentage, deleteSingleStock, deleteAllStock };
