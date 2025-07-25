@@ -1,5 +1,4 @@
 import StockTarget from "../../models/StocksTarget.js";
-import StockTargetEmail from "../../models/StockTargetEmail.js";
 
 export const createTargetPercentageDocument = async (
   targetPercentage,
@@ -23,6 +22,7 @@ export const updateTargetPercentageDocument = async (
     { stockName, userId },
     {
       targetPercentage: targetPercentage,
+      emailSent: false
     },
     {
       new: true,
@@ -37,16 +37,4 @@ export const getTargetPercentageDocument = async (stockName, userId) => {
   return targetPercentage;
 };
 
-export const updateStockEmailDocument = async (stockName, userId) => {
-  const findDocument = await StockTargetEmail.findOneAndUpdate(
-    { stockName, userId },
-    {
-      emailSent: false,
-    },
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
-  return findDocument;
-};
+
