@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 // promise based connection
 
-const connectDB = async () => {
+const connectDB = async() => {
     try {
         // Set the strictQuery option explicitly
         mongoose.set('strictQuery', true);
