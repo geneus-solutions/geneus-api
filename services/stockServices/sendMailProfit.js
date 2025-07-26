@@ -1,37 +1,51 @@
 import User from "../../models/User.js";
 import eventBus from "../../utilities/createEvent.js";
-import sendEmail from  "../../controllers/EmailController.js";
-import StockTargetEmail from "../../models/StockTargetEmail.js";
+import sendEmail from "../../controllers/EmailController.js";
 
-eventBus.on("sendTargetProfitMail", async ({ userId, stockName, profitPercentage, totalShares, totalInvestment }) => {
+eventBus.on("sendTargetProfitMail", async ({ userId, stockSummary }) => {
   try {
-    const user = await User.findById({_id: userId});
+    const user = await User.findById({ _id: userId });
     if (!user?.email) return;
-    await sendEmail(
-            process.env.toAdmin,
-            user?.email,
-            `🎯 Target Reached for ${stockName}`,
-            `Hi ${user.name},Your stock ${stockName} has reached a profit of ${profitPercentage.toFixed(2)}%! You might want to review your investment now. - Stock Tracker,
-            Total Shares ${totalShares} your invested Amount is ${totalInvestment}`,);
 
-    console.log(`Mail sent to ${user.email} for ${stockName}`);
-    const emailSent = await StockTargetEmail.findOneAndUpdate({userId, stockName},
-      {
-        emailSent: true,
-      },
-      {
-        new: true,
-      runValidators: true,
-      }
-    )
-    if(!emailSent){
-      const createNew = await StockTargetEmail.create({
-        userId,
-        stockName,
-        emailSent: true
-      })
-    }
+    // Build the stock summary as bullet points
+    const stockDetails = stockSummary
+      .map(
+        (stock, index) => 
+`${index + 1}. ${stock.stockName}
+   - 📈 Profit: ${stock.profitPercentage.toFixed(2)}%
+   - 📊 Shares: ${stock.totalShares}
+   - 💰 Invested: ₹${stock.totalInvested.toFixed(2)}\n`
+      )
+      .join("\n");
+
+    const message = `
+Hi ${user.name},
+
+🎯 Great news! Some of your stocks have crossed your target profit percentage.
+
+Here’s a quick summary:\n
+${stockDetails}
+
+You might want to review your investments and take action based on your financial goals.
+
+Thanks for using Stock Tracker!
+Best regards,  
+Geneus Solutions – Stock Tracker Team
+`;
+
+    // Send email
+    await sendEmail(
+      process.env.toAdmin,
+      user.email,
+      `🎯 Profit Target Achieved for Your Stocks`,
+      message
+    );
+
+    // console.log(`✅ Mail sent to ${user.email}`);
   } catch (error) {
-    console.error("Failed to send mail:", error);
+    console.error("❌ Failed to send mail:", error);
   }
 });
+
+
+

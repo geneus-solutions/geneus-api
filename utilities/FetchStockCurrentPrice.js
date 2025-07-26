@@ -3,7 +3,6 @@ yahooFinance.suppressNotices(["yahooSurvey"]);
 
 export const fetchStockCurrentPrice = async (symbol) => {
   try {
-    console.log('thi si symbol', symbol)
     const symbolFormatted = `${symbol?.toUpperCase().trim()}.NS`;
     const quote = await yahooFinance.quote(symbolFormatted);
     const price = parseFloat(quote?.regularMarketPrice);

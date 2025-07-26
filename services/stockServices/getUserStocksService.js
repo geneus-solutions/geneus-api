@@ -55,7 +55,6 @@ export const getUserTotalStock = async (userId) => {
     },
   ]);
 
-  console.log('the stockss slflds------------>', stocksStats)
   // Step 2: Enrich with live price and total value
   let totalShares = 0;
   let totalInvested = 0;
@@ -112,7 +111,6 @@ export const getUserTotalStock = async (userId) => {
   const totalProfitPercentage =
     totalInvested === 0 ? 0 : (totalProfit / totalInvested) * 100;
 
-  console.log("this is all Stocks", allStocks);
   return {
     stocks: allStocks || [],
     summary: {
