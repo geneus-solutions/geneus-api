@@ -17,6 +17,7 @@ import jwt from "jsonwebtoken";
 import aj from "../utilities/ArcjectSetup/arcjetConfig.js";
 import UserProfile from "../models/UserProfile.js";
 import Contact from "../models/Contact.js";
+import Details from "../models/FoodDetails.js";
 
 configDotenv();
 
@@ -131,78 +132,76 @@ const login = async (req, res) => {
     }
 };
 
-const getUser = async (req, res) => {
-    try {
-        const { userId } = req.user;
-        // Populate the references for details, food, and plan
-        const user = await User.findById(userId)
-            .populate("details")
-            .populate("food")
-            .populate("plan");
+// const getUser = async (req, res) => {
+//     try {
+//         const { userId } = req.user;
+//         // Populate the references for details, food, and plan
+//         const user = await Details.findOne({userId: userId})
+//             .populate("userId");
+//         console.log('this is user',user)
+//         if (!user) {
+//             return res.status(404).json({ error: "User not found" });
+//         }
 
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
+//         // Check if populated fields are available
+//         // if (!user.details) {
+//         //     console.log(
+//         //         "Population error: One or more referenced fields are missing."
+//         //     );
+//         //     return res
+//         //         .status(500)
+//         //         .json({ error: "Failed to populate user data" });
+//         // }
 
-        // Check if populated fields are available
-        if (!user.details || !user.food || !user.plan) {
-            console.log(
-                "Population error: One or more referenced fields are missing."
-            );
-            return res
-                .status(500)
-                .json({ error: "Failed to populate user data" });
-        }
+//         const totalCalories = user.caloriegoal;
+//         const goal = user.goal;
 
-        const totalCalories = user.details.caloriegoal;
-        const goal = user.details.goal;
+//         // Macronutrient distribution based on the goal
+//         const macronutrientDistribution = {
+//             "Lose Weight": { protein: 30, carbs: 40, fat: 30 },
+//             "Gain Muscle": { protein: 35, carbs: 40, fat: 25 },
+//             "Athletic Performance": { protein: 30, carbs: 50, fat: 20 },
+//             "Maintain Weight": { protein: 30, carbs: 45, fat: 25 },
+//             "Gain Weight": { protein: 20, carbs: 55, fat: 25 },
+//             "Manage Stress": { protein: 30, carbs: 25, fat: 45 },
+//         };
 
-        // Macronutrient distribution based on the goal
-        const macronutrientDistribution = {
-            "Lose Weight": { protein: 30, carbs: 40, fat: 30 },
-            "Gain Muscle": { protein: 35, carbs: 40, fat: 25 },
-            "Athletic Performance": { protein: 30, carbs: 50, fat: 20 },
-            "Maintain Weight": { protein: 30, carbs: 45, fat: 25 },
-            "Gain Weight": { protein: 20, carbs: 55, fat: 25 },
-            "Manage Stress": { protein: 30, carbs: 25, fat: 45 },
-        };
+//         const {
+//             protein: proteinPercent,
+//             carbs: carbsPercent,
+//             fat: fatPercent,
+//         } = macronutrientDistribution[goal] || {
+//             protein: 20,
+//             carbs: 50,
+//             fat: 30,
+//         };
 
-        const {
-            protein: proteinPercent,
-            carbs: carbsPercent,
-            fat: fatPercent,
-        } = macronutrientDistribution[goal] || {
-            protein: 20,
-            carbs: 50,
-            fat: 30,
-        };
+//         // Calculate macronutrients in grams
+//         const proteinGrams = (totalCalories * (proteinPercent / 100)) / 4;
+//         const carbsGrams = (totalCalories * (carbsPercent / 100)) / 4;
+//         const fatGrams = (totalCalories * (fatPercent / 100)) / 9;
 
-        // Calculate macronutrients in grams
-        const proteinGrams = (totalCalories * (proteinPercent / 100)) / 4;
-        const carbsGrams = (totalCalories * (carbsPercent / 100)) / 4;
-        const fatGrams = (totalCalories * (fatPercent / 100)) / 9;
+//         console.log(
+//             `Calculated Macronutrients - Protein: ${Math.round(
+//                 proteinGrams
+//             )}g, Carbs: ${Math.round(carbsGrams)}g, Fat: ${Math.round(
+//                 fatGrams
+//             )}g`
+//         );
 
-        console.log(
-            `Calculated Macronutrients - Protein: ${Math.round(
-                proteinGrams
-            )}g, Carbs: ${Math.round(carbsGrams)}g, Fat: ${Math.round(
-                fatGrams
-            )}g`
-        );
-
-        res.status(201).json({
-            user,
-            macronutrients: {
-                protein: Math.round(proteinGrams),
-                carbs: Math.round(carbsGrams),
-                fat: Math.round(fatGrams),
-            },
-        });
-    } catch (error) {
-        console.error("Server error: ", error);
-        res.status(500).json({ message: "Server error", error });
-    }
-};
+//         res.status(201).json({
+//             user,
+//             macronutrients: {
+//                 protein: Math.round(proteinGrams),
+//                 carbs: Math.round(carbsGrams),
+//                 fat: Math.round(fatGrams),
+//             },
+//         });
+//     } catch (error) {
+//         console.error("Server error: ", error);
+//         res.status(500).json({ message: "Server error", error });
+//     }
+// };
 
 const logut = async (req, res) => {
     try {
@@ -227,28 +226,30 @@ const logut = async (req, res) => {
 
 const contact = async (req, res) => {
   try {
-    const { name, email, subject, message } = req.body;
+    const { name, email, subject, contactNumber, message } = req.body;
     if (!name) return res.status(400).json({ error: "Name is required" });
     if (!email) return res.status(400).json({ error: "Email is required" });
     if (!subject) return res.status(400).json({ error: "Contact is required" });
+    if (!contactNumber) return res.status(400).json({ error: "Contact Number is required" });
     if (!message)
       return res.status(400).json({ error: "Please mention your query" });
     const query = new Contact({
       name,
       email,
       subject,
+      contactNumber,
       message,
     });
 
         const currentDate = new Date();
         const newQuery = "Geneus Solutions New Contact Query: " + name;
-        const emailSubject = `${newQuery} on ${currentDate.toLocaleDateString()} at ${currentDate.toLocaleTimeString()} - mm/dd/yyyy`;
+        const emailSubject = `${newQuery} on ${currentDate.toLocaleDateString()} at ${currentDate.toLocaleTimeString()}`;
 
         sendEmail(
             email,
             process.env.toAdmin,
             emailSubject,
-            `Name: ${name}\nEmail: ${email}\nMessage: ${message}`
+            `Name: ${name}\nEmail: ${email}\nMessage: ${message}\nContact Number:${contactNumber}`
         );
 
         await query.save();
@@ -818,7 +819,6 @@ const deleteUserAccountById = async (req, res) => {
 
 export {
     loginUser,
-    getUser,
     logut,
     contact,
     forgotPassword,

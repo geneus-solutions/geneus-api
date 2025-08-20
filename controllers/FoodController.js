@@ -8,6 +8,7 @@ const postFood =  async (req, res) => {
   
   try {
         const { userId } = req.user; // Extract userId from the request
+        console.log('this is userId', userId);
         const { breakfast, lunch, dinner } = req.body;
         const userExists = await User.findById(userId);
 
@@ -75,6 +76,7 @@ const postFood =  async (req, res) => {
             }
 
             const updatedFood = await foodData.save();
+            console.log('this is updated Food', updatedFood);
 
             return res.status(200).json(updatedFood);
 
@@ -100,7 +102,7 @@ const getFoodById =  async (req, res) => {
 
         const { id } = req.params;
         const { date } = req.query; // Extract date from query parameters
-
+        console.log('this is date', date)
         if (!mongoose.isValidObjectId(id)) {
             return res.status(400).json({ message: "Invalid user ID" });
         }
@@ -118,6 +120,7 @@ const getFoodById =  async (req, res) => {
             .populate('lunch.item')     
             .populate('dinner.item');    
 
+            console.log('this  is foodData', foodData)
         if (!foodData) {
           const user = await User.findById(id, { _id: 1, name: 1, mobile: 1 , food: 1 });
             return res.status(200).json({ 
@@ -173,7 +176,7 @@ const getFoodById =  async (req, res) => {
           totalFat : Math.round(totalFat)
 
         };
-
+        console.log('thtis is response Data', responseData)
         return res.status(200).json(responseData);
     } catch (error) {
         console.error("Error fetching food data:", error);
