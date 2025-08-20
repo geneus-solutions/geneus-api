@@ -1,7 +1,6 @@
 import express from 'express';
 import {
   loginUser,
-  getUser,
   signup,
     androidSignup,
     newUserRegister,
@@ -19,7 +18,6 @@ const router = express.Router();
 router.post("/signup", signup);
 router.post("/androidSignup", androidSignup);
 router.post("/login", loginUser);
-router.get("/api/user", Auth, getUser);
 router.post("/refreshToken", refreshTokenHandler);
 router.post("/userAuth", validateToken, userAuth);
 router.post("/newUserRegister", newUserRegister);

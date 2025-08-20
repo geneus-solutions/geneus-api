@@ -9,7 +9,7 @@ const Auth = (req, res, next) => {
   try {
     const authHeader =
       req.headers["authorization"] || req.headers["Authorization"];
-    // console.log('authHeader : ', authHeader);
+    console.log('authHeader : ', authHeader);
     if (!authHeader) {
       return res.status(403).json({ error: "Please log in to access" });
     }

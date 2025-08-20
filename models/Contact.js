@@ -31,6 +31,11 @@ const ContactSchema = new Schema(
       trim: true,
       required: true,
     },
+    contactNumber:{
+      type: Number,
+      trim: true,
+      required: true
+    },
     message: {
       type: String,
       trim: true,

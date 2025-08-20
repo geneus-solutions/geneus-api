@@ -9,6 +9,7 @@ const getYourCaloriesRequirement = async (req, res) => {
     const { userId } = req.user;
 
     const userExists = await User.findById(userId);
+    const userPlan = await Plan.findOne({userId: userId})
 
     if (!userExists) {
       res.status(404).json({ message: "User not found" });
@@ -36,12 +37,28 @@ const getYourCaloriesRequirement = async (req, res) => {
       fat = Math.round((detailExists.caloriegoal * 0.25) / 9);
     } else if(detailExists.goal === "Gain Weight"){
       carbs = Math.round((detailExists.caloriegoal * 0.55) / 4);
-      protein = Math.round((detailExists.caloriegoal * 0.25) / 4);
+      protein = Math.round((detailExists.caloriegoal * 0.2) / 4);
+      fat = Math.round((detailExists.caloriegoal * 0.25) / 9);
+    } 
+     else if(detailExists.goal === "Gain Muscle"){
+      carbs = Math.round((detailExists.caloriegoal * 0.4) / 4);
+      protein = Math.round((detailExists.caloriegoal * 0.35) / 4);
+      fat = Math.round((detailExists.caloriegoal * 0.25) / 9);
+    } 
+   else if(detailExists.goal === "Athletic Performance"){
+      carbs = Math.round((detailExists.caloriegoal * 0.3) / 4);
+      protein = Math.round((detailExists.caloriegoal * 0.5) / 4);
       fat = Math.round((detailExists.caloriegoal * 0.2) / 9);
     } 
-
+    else if(detailExists.goal === "Manage Stress"){
+      carbs = Math.round((detailExists.caloriegoal * 0.25) / 4);
+      protein = Math.round((detailExists.caloriegoal * 0.3) / 4);
+      fat = Math.round((detailExists.caloriegoal * 0.45) / 9);
+    } 
+    console.log(`new Deatails carbs: ${carbs}, protein: ${protein}, fat: ${fat} `)
     res.status(200).json({
       ...detailExists._doc,
+      userPlan,
       carbs,
       protein,
       fat,
