@@ -26,6 +26,9 @@ const detailsSchema = new mongoose.Schema({
     weight : {  //
         type : Number
     },
+    goalWeight:{
+        type: Number
+    },
     caloriegoal : {  //
         type : Number
     }

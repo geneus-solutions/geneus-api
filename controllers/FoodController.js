@@ -190,7 +190,8 @@ const updateFood = async (req, res) => {
     
       const { userId } = req.user; 
       const { meal, quantity, id } = req.body;
-
+      console.log('this is userId from updateFood', userId);
+      console.log('this is body update foor', req.body)
       const Today = new Date();
         const dateFormat = Today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
         const startOfDay = new Date(dateFormat); // Midnight of the day
@@ -249,7 +250,7 @@ const updateFood = async (req, res) => {
     try {
       const { userId } = req.user; 
       const { id } = req.body; 
-
+      console.log('this is body from remove Food-->', req.body)
       const Today = new Date();
         const dateFormat = Today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
         const startOfDay = new Date(dateFormat); // Midnight of the day

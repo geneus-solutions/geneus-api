@@ -4,7 +4,7 @@ const isNutriPlanValid = async(req, res, next) => {
     try {
 
         const { userId } = req.user;
-
+        console.log('thi is userId form is isNutriPlanVliad', userId)
         const plan = await Plan.findOne({userId});
 
         if (!plan) {
