@@ -86,7 +86,7 @@ const updateDetail = async (req, res) => {
       weight,
       goalWeight,
     } = req.body;
-
+    console.log('this is data', req.body)
     const userExists = await User.findById(userId);
 
     if (!userExists) {
@@ -152,6 +152,7 @@ const updateDetail = async (req, res) => {
         height,
         weight,
         goal,
+        goalWeight,
         caloriegoal: calories,
       });
       await newDetail.save();

@@ -4,13 +4,19 @@ import { generateAccessToken } from "./AuthController.js";
 
 const getRefreshToken = async (req, res, next) => {
   try {
-    const cookies = req.cookies;
+    // const cookies = req.cookies;
+    let refreshToken = req.cookies.refreshToken;
 
-    if (!cookies.refreshToken) {
+    //  For mobile -> from request body or header
+    if (!refreshToken) {
+      refreshToken = req.body.refreshToken || req.headers['x-refresh-token'];
+    }
+    
+    if (!refreshToken) {
       return res.status(401).json({ message: "Please logIn to access" });
     }
 
-    const refreshToken = cookies.refreshToken;
+
 
     const foundUser = await user.findOne({ refreshToken: refreshToken }).lean();
 
