@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { configDotenv } from 'dotenv';
 configDotenv()
-const sendEmail = async (sender, receiver, subject, text) => {
+const sendEmail = async (sender, receiver, subject, text, html, attachments) => {
     try {
 
       let transporter = nodemailer.createTransport({
@@ -18,6 +18,8 @@ const sendEmail = async (sender, receiver, subject, text) => {
         to: receiver, 
         subject: subject, // Subject of the email
         text: text, // Plain text body
+        html: html,
+        attachments: attachments,
       };
   
       // Send the email
