@@ -12,7 +12,6 @@ export const createJobApplication = async (data) => {
     tenthMarks,
     twelfthMarks,
   } = data;
-  console.log(data);
 
   if (
     !name ||

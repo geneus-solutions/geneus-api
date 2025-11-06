@@ -1,9 +1,10 @@
 import { createJobApplication } from "../services/jobApplication/JobApplication.js";
 import sendEmail from "./EmailController.js";
+import fs from 'fs';
 
 export const applyJob = async (req, res) => {
   try {
-    console.log('this is req.body', req.body)
+    console.log("this is req.body", req.body);
     const application = await createJobApplication(req.body);
 
     // const transporter = nodemailer.createTransport({
@@ -83,7 +84,13 @@ export const applyJob = async (req, res) => {
         ? [{ filename: req.file.originalname, content: req.file.buffer }]
         : []
     );
-   return res.status(200).json({
+    if (req.file && req.file.path) {
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error("Error deleting file:", err);
+        else console.log("Temporary file deleted:", req.file.path);
+      });
+    }
+    return res.status(200).json({
       success: true,
       message: "Application submitted successfully. Email sent to admin.",
       application,
