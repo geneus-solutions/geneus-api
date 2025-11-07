@@ -4,7 +4,6 @@ import fs from 'fs';
 
 export const applyJob = async (req, res) => {
   try {
-    console.log("this is req.body", req.body);
     const application = await createJobApplication(req.body);
 
     // const transporter = nodemailer.createTransport({
@@ -75,8 +74,8 @@ export const applyJob = async (req, res) => {
 
     // await transporter.sendMail(mailOptions);
     sendEmail(
+      email,
       process.env.toAdmin,
-      req.body.email,
       `New Application: ${name} (${degreeBranch})`,
       "",
       htmlTemplate,
