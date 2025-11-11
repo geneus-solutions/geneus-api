@@ -73,15 +73,13 @@ export const applyJob = async (req, res) => {
     // };
 
     // await transporter.sendMail(mailOptions);
-    sendEmail(
+    await sendEmail(
       email,
       process.env.toAdmin,
       `New Application: ${name} (${degreeBranch})`,
       "",
       htmlTemplate,
-      req.file
-        ? [{ filename: req.file.originalname, content: req.file.buffer }]
-        : []
+      req.file ? [{ filename: req.file.originalname, path: req.file.path }] : []
     );
     if (req.file && req.file.path) {
       fs.unlink(req.file.path, (err) => {
