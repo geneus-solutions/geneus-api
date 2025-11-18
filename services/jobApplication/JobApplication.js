@@ -1,17 +1,7 @@
 import JobApplication from "../../models/JobApplication.js";
 
-
 export const createJobApplication = async (data) => {
-  const {
-    name,
-    email,
-    phone,
-    college,
-    degreeBranch,
-    currentSemester,
-    tenthMarks,
-    twelfthMarks,
-  } = data;
+  const { name, email, phone, college, degreeBranch, currentSemester } = data;
 
   if (
     !name ||
@@ -19,9 +9,7 @@ export const createJobApplication = async (data) => {
     !phone ||
     !college ||
     !degreeBranch ||
-    !currentSemester ||
-    !tenthMarks ||
-    !twelfthMarks
+    !currentSemester
   ) {
     throw new Error("Missing required fields");
   }
@@ -33,8 +21,6 @@ export const createJobApplication = async (data) => {
     college,
     degreeBranch,
     currentSemester,
-    tenthMarks,
-    twelfthMarks,
   });
 
   await application.save();

@@ -21,8 +21,6 @@ export const applyJob = async (req, res) => {
       college,
       degreeBranch,
       currentSemester,
-      tenthMarks,
-      twelfthMarks,
     } = req.body;
 
     const htmlTemplate = `
@@ -44,8 +42,6 @@ export const applyJob = async (req, res) => {
               <tr><td style="padding: 6px 0;"><strong>College:</strong></td><td>${college}</td></tr>
               <tr><td style="padding: 6px 0;"><strong>Degree Branch:</strong></td><td>${degreeBranch}</td></tr>
               <tr><td style="padding: 6px 0;"><strong>Current Semester:</strong></td><td>${currentSemester}</td></tr>
-              <tr><td style="padding: 6px 0;"><strong>Tenth Marks(%):</strong></td><td>${tenthMarks}</td></tr>
-              <tr><td style="padding: 6px 0;"><strong>Twelfth Marks(%):</strong></td><td>${twelfthMarks}</td></tr>
             </table>
 
             <div style="margin-top: 32px; text-align: center;">
