@@ -32,17 +32,7 @@ const jobApplicationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-    },
-    tenthMarks: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    twelfthMarks: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    }
   },
   { timestamps: true }
 );
