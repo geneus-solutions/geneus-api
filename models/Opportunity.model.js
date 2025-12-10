@@ -38,11 +38,11 @@ const OpportunitySchema = new mongoose.Schema(
     ],
     locationType: {
       type: String,
-      enum: ["remote", "onsite", "hybrid"],
-      default: "remote"
+      enum: ["Remote", "Onsite", "Hybrid"],
+      default: "Remote"
     },
     location: { 
-        type: String 
+        type: String
     },
 
     /* ------------------------------
@@ -65,6 +65,7 @@ const OpportunitySchema = new mongoose.Schema(
       price: { type: Number },
       durationWeeks: { type: Number },
       modules: [{ type: String }],
+      keywords: [{type: string}],
       // Links to internship
       internshipId: {
         type: mongoose.Schema.Types.ObjectId,
