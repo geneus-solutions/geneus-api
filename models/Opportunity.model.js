@@ -65,7 +65,7 @@ const OpportunitySchema = new mongoose.Schema(
       price: { type: Number },
       durationWeeks: { type: Number },
       modules: [{ type: String }],
-      keywords: [{type: string}],
+      keywords: [{type: String}],
       // Links to internship
       internshipId: {
         type: mongoose.Schema.Types.ObjectId,
