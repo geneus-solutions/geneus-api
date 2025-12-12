@@ -5,46 +5,70 @@ const OpportunitySchema = new mongoose.Schema(
     type: {
       type: String,
       enum: ["job", "course", "internship"],
-      required: true
+      required: true,
     },
 
     // Shared fields
-    title: { 
-        type: String, 
-        required: true 
+    title: {
+      type: String,
+      required: true,
     },
-    description: { 
-        type: String 
+    description: {
+      type: String,
     },
-    about: {
-      type: String
-    },
-    department: { 
-      type: String 
+    about: [
+      {
+        type: String,
+      },
+    ],
+
+    department: {
+      type: String,
     },
     visibility: {
       type: String,
       enum: ["public", "private"],
-      default: "public"
+      default: "public",
     },
     employementType: {
-    type: String,
-    required: true,
-    enum: ['Full-time', 'Part-time', 'Contract', 'Freelance'],
-    default: 'Full-time'
-  },
-    skills: [
-        { type: String }
-    ],
+      type: String,
+      required: true,
+      enum: ["Full-time", "Part-time", "Contract", "Freelance"],
+      default: "Full-time",
+    },
+    skills: [{ type: String }],
     locationType: {
       type: String,
       enum: ["Remote", "Onsite", "Hybrid"],
-      default: "Remote"
+      default: "Remote",
     },
-    location: { 
-        type: String
+    location: {
+      type: String,
     },
-
+    whoCanApply: [
+      {
+        type: String,
+      },
+    ],
+    otherRequirements: [
+      {
+        type: String,
+      },
+    ],
+    perks: [
+      {
+        type: String,
+      },
+    ],
+    numberOfOpening: {
+      type: Number,
+    },
+    lastDateToApply: {
+      type: Date,
+    },
+    startFrom: {
+      type: String,
+    },
     /* ------------------------------
      * JOB DETAILS (type = job)
      * ------------------------------ */
@@ -54,8 +78,8 @@ const OpportunitySchema = new mongoose.Schema(
       requirements: [{ type: String }],
       internshipId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Opportunity"
-      }
+        ref: "Opportunity",
+      },
     },
 
     /* ------------------------------
@@ -65,12 +89,12 @@ const OpportunitySchema = new mongoose.Schema(
       price: { type: Number },
       durationWeeks: { type: Number },
       modules: [{ type: String }],
-      keywords: [{type: String}],
+      keywords: [{ type: String }],
       // Links to internship
       internshipId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Opportunity"
-      }
+        ref: "Opportunity",
+      },
     },
 
     /* ----------------------------------
@@ -80,22 +104,21 @@ const OpportunitySchema = new mongoose.Schema(
       duration: { type: String }, // e.g. "3 months"
       stipendType: {
         type: String,
-        enum: ["unpaid", "fixed", "range"]
+        enum: ["unpaid", "fixed", "range"],
       },
 
       stipendAmount: {
-          type: Number
+        type: Number,
       },
 
       stipendRange: {
+        type: {
           min: Number,
-          max: Number
+          max: Number,
+        },
+        default: null,
       },
-      
-      lastDateToApply: {
-        type: Date,
-      }
-}
+    },
   },
   { timestamps: true }
 );
