@@ -1,6 +1,7 @@
 import JobApplication from "../../models/JobApplication.js";
+import ApiError from "../../utilities/ApiError.js";
 
-export const createJobApplication = async (data) => {
+export const createJobApplication = async (data, opportunityId) => {
   const { name, email, phone, college, degreeBranch, currentSemester } = data;
 
   if (
@@ -11,7 +12,7 @@ export const createJobApplication = async (data) => {
     !degreeBranch ||
     !currentSemester
   ) {
-    throw new Error("Missing required fields");
+    throw new ApiError(400, "Missing required fields");
   }
 
   const application = new JobApplication({
@@ -21,6 +22,7 @@ export const createJobApplication = async (data) => {
     college,
     degreeBranch,
     currentSemester,
+    opportunityId
   });
 
   await application.save();

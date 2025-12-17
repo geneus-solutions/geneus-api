@@ -1,19 +1,11 @@
 import { createJobApplication } from "../services/jobApplication/JobApplication.js";
+import { getOpportunityById } from "../services/opportunityServices/opportunity.service.js";
+import ApiError from "../utilities/ApiError.js";
+import catchAsync from "../utilities/catchAsync.js";
 import sendEmail from "./EmailController.js";
 import fs from 'fs';
 
-export const applyJob = async (req, res) => {
-  try {
-    const application = await createJobApplication(req.body);
-
-    // const transporter = nodemailer.createTransport({
-    //   service: "gmail",
-    //   auth: {
-    //     user: process.env.ADMIN_EMAIL,
-    //     pass: process.env.ADMIN_PASS,
-    //   },
-    // });
-
+export const applyJob = catchAsync(async (req, res) => {
     const {
       name,
       email,
@@ -22,6 +14,13 @@ export const applyJob = async (req, res) => {
       degreeBranch,
       currentSemester,
     } = req.body;
+    const { opportunityId } = req.params;
+    console.log('this is opportunity id', opportunityId)
+    const opportunity = await getOpportunityById(opportunityId);
+
+    if(!opportunity) throw new ApiError(404, "Opportunity not exists");
+
+    const application = await createJobApplication(req.body, opportunity._id);
 
     const htmlTemplate = `
       <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px;">
@@ -72,7 +71,7 @@ export const applyJob = async (req, res) => {
     await sendEmail(
       email,
       process.env.toAdmin,
-      `New Application: ${name} (${degreeBranch})`,
+      `New Application: ${name} ${phone} ${opportunity.type} ${opportunity.title} (${degreeBranch})`,
       "",
       htmlTemplate,
       req.file ? [{ filename: req.file.originalname, path: req.file.path }] : []
@@ -88,11 +87,4 @@ export const applyJob = async (req, res) => {
       message: "Application submitted successfully. Email sent to admin.",
       application,
     });
-  } catch (error) {
-    console.error("Error in job application:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Server error while sending application email.",
-    });
-  }
-};
+});
