@@ -307,3 +307,11 @@ export async function deleteOpportunityService(id) {
 
   return deleted; // not returned to client, but needed to check existence
 }
+
+
+// Get Opportunity by ID:-
+
+export async function getOpportunityById(id) {
+  const opportunity = await Opportunity.findById({_id: id});
+  return opportunity;
+}
