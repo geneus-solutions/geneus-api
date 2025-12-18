@@ -157,7 +157,8 @@ export async function getPublicOpportunitiesService(department, visibility) {
     filter.department = department;
   }
 
-  const list = await Opportunity.find(filter).sort({ createdAt: -1 });
+  const list = await Opportunity.find(filter).sort({ createdAt: -1 }).populate("courseDetails.internshipId");
+
   // Trim fields based on type
   const formatted = list.map((item) => {
     const obj = item.toObject();
@@ -175,6 +176,12 @@ export async function getPublicOpportunitiesService(department, visibility) {
     if (obj.type === "course") {
       delete obj.jobDetails;
       delete obj.internshipDetails;
+      if(obj.courseDetails?.internshipId){
+        console.log('internship id available')
+        delete obj.courseDetails.internshipId.jobDetails
+        delete obj.courseDetails.internshipId.courseDetails
+      }
+      console.log('this is course', obj)
     }
 
     return obj;
