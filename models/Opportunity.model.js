@@ -73,7 +73,7 @@ const OpportunitySchema = new mongoose.Schema(
      * JOB DETAILS (type = job)
      * ------------------------------ */
     jobDetails: {
-      salary: { type: Number },
+      salary: { type: String },
       responsibilities: [{ type: String }],
       requirements: [{ type: String }],
       internshipId: {
