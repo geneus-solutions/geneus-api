@@ -108,13 +108,13 @@ const OpportunitySchema = new mongoose.Schema(
       },
 
       stipendAmount: {
-        type: Number,
+        type: String,
       },
 
       stipendRange: {
         type: {
-          min: Number,
-          max: Number,
+          min: String,
+          max: String,
         },
         default: null,
       },
