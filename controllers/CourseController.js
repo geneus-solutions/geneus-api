@@ -16,6 +16,60 @@ const getCourse = async (req, res) => {
   }
 };
 
+// const addCourse = async (req, res) => {
+//   try {
+//     const {
+//       id,
+//       title,
+//       img,
+//       description,
+//       level,
+//       price,
+//       discount_price,
+//       learnings,
+//       requirements,
+//       aboutCourse,
+//       whythisCourse,
+//       whoitsfor,
+//     } = req.body;
+
+//     console.log('this is create course data--->', req.body)
+//     // Validation checks (basic example, consider using libraries like Joi)
+//     if (!title || !img || !price) {
+//       return res
+//         .status(400)
+//         .json({ error: "Title, Image, Description, and Price are required." });
+//     }
+//     // Create a new course instance
+//     const newCourse = new Course({
+//       id,
+//       title,
+//       img,
+//       description,
+//       level,
+//       price,
+//       discount_price,
+//       learnings,
+//       requirements,
+//       aboutCourse,
+//       whythisCourse,
+//       whoitsfor,
+//     });
+
+//     // Save the course to the database
+//     await newCourse.save();
+//     res
+//       .status(201)
+//       .json({ message: "Course added successfully", course: newCourse });
+//   } catch (error) {
+//     console.error("Error adding course:", error);
+//     res
+//       .status(500)
+//       .json({ error: "Error adding course", details: error.message });
+//   }
+// };
+
+
 const addCourse = async (req, res) => {
   try {
     const {
@@ -26,21 +80,26 @@ const addCourse = async (req, res) => {
       level,
       price,
       discount_price,
+      aboutCourse,
       learnings,
       requirements,
-      aboutCourse,
-      whythisCourse,
       whoitsfor,
+      whythisCourse,
+      courseContent,
+      notes,
+      enabled,
     } = req.body;
 
-    // Validation checks (basic example, consider using libraries like Joi)
-    if (!title || !img || !description || !price) {
-      return res
-        .status(400)
-        .json({ error: "Title, Image, Description, and Price are required." });
+    console.log("Create course payload --->", req.body);
+
+    // ✅ Basic validation
+    if (!title || !img || !price) {
+      return res.status(400).json({
+        error: "Title, Image, and Price are required.",
+      });
     }
 
-    // Create a new course instance
+    // ✅ Create course
     const newCourse = new Course({
       id,
       title,
@@ -49,23 +108,36 @@ const addCourse = async (req, res) => {
       level,
       price,
       discount_price,
-      learnings,
-      requirements,
-      aboutCourse,
-      whythisCourse,
-      whoitsfor,
+
+      aboutCourse: aboutCourse || {},
+
+      learnings: learnings || [],
+      requirements: requirements || [],
+      whoitsfor: whoitsfor || [],
+
+      whythisCourse: whythisCourse || {},
+
+      courseContent: courseContent || [],
+
+      notes: notes || {},
+
+      enabled: enabled ?? true,
     });
 
-    // Save the course to the database
-    await newCourse.save();
-    res
-      .status(201)
-      .json({ message: "Course added successfully", course: newCourse });
+    // ✅ Save to DB
+    const savedCourse = await newCourse.save();
+
+    return res.status(201).json({
+      message: "Course added successfully",
+      course: savedCourse,
+    });
   } catch (error) {
     console.error("Error adding course:", error);
-    res
-      .status(500)
-      .json({ error: "Error adding course", details: error.message });
+
+    return res.status(500).json({
+      error: "Failed to add course",
+      details: error.message,
+    });
   }
 };
 
@@ -137,41 +209,103 @@ const getCourseById = async (req, res) => {
   }
 };
 
+// const updateCourse = async (req, res) => {
+//   try {
+//     const { courseId } = req.params;
+//     console.log("this is course Id", req.params);
+//     console.log(req.body);
+//     const {
+//       title,
+//       img,
+//       description,
+//       level,
+//       price,
+//       discount_price,
+//       learnings,
+//       requirements,
+//       aboutCourse,
+//       whythisCourse,
+//       whoitsfor,
+//     } = req.body;
+
+//     // Find the course by ID and update it
+//     const updatedCourse = await Course.findByIdAndUpdate(
+//       { _id: courseId },
+//       {
+//         title,
+//         img,
+//         description,
+//         level,
+//         price,
+//         discount_price,
+//         learnings,
+//         requirements,
+//         aboutCourse,
+//         whythisCourse,
+//         whoitsfor,
+//       },
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!updatedCourse) {
+//       return res.status(404).json({ error: "Course not found" });
+//     }
+
+//     return res.status(200).json({ message: "Course updated successfully" });
+//   } catch (error) {
+//     console.error("Error updating course:", error);
+//     res
+//       .status(500)
+//       .json({ error: "Error updating course", details: error.message });
+//   }
+// };
+
+/* ----- update the updateCourse controller ----- */
+
 const updateCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
-    console.log("this is course Id", req.params);
-    console.log(req.body);
-    const {
-      title,
-      img,
-      description,
-      level,
-      price,
-      discount_price,
-      learnings,
-      requirements,
-      aboutCourse,
-      whythisCourse,
-      whoitsfor,
-    } = req.body;
 
-    // Find the course by ID and update it
+    // ✅ Validate MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ error: "Invalid course ID" });
+    }
+
+    // ✅ Build update object dynamically
+    const updateData = {};
+
+    const fields = [
+      "title",
+      "img",
+      "description",
+      "level",
+      "price",
+      "discount_price",
+      "learnings",
+      "requirements",
+      "aboutCourse",
+      "whythisCourse",
+      "whoitsfor",
+      "courseContent",
+      "notes",
+      "enabled",
+    ];
+
+    fields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    // ❌ Nothing to update
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: "No fields provided to update" });
+    }
+
+    // ✅ Update course
     const updatedCourse = await Course.findByIdAndUpdate(
-      { _id: courseId },
-      {
-        title,
-        img,
-        description,
-        level,
-        price,
-        discount_price,
-        learnings,
-        requirements,
-        aboutCourse,
-        whythisCourse,
-        whoitsfor,
-      },
+      courseId,
+      { $set: updateData },
       { new: true, runValidators: true }
     );
 
@@ -179,14 +313,21 @@ const updateCourse = async (req, res) => {
       return res.status(404).json({ error: "Course not found" });
     }
 
-    return res.status(200).json({ message: "Course updated successfully" });
+    return res.status(200).json({
+      message: "Course updated successfully",
+      course: updatedCourse,
+    });
   } catch (error) {
     console.error("Error updating course:", error);
-    res
-      .status(500)
-      .json({ error: "Error updating course", details: error.message });
+    return res.status(500).json({
+      error: "Error updating course",
+      details: error.message,
+    });
   }
 };
+
+export default updateCourse;
+
 
 const deleteCourse = async (req, res) => {
   try {
