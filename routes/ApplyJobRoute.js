@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { applyJob } from "../controllers/ApplyJobController.js";
-import { upload } from "../utilities/multerConfig.js";
+import { uploadDocs } from "../middlewares/uploadDocs.js";
 
 const router = Router();
 
-router.post("/apply-job/:opportunityId", upload.single("resume"), applyJob);
+router.post("/apply-job/:opportunityId", uploadDocs.single("resume"), applyJob);
 
 export default router;

@@ -5,6 +5,13 @@ const foodSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     },
+
+    //add date field:-
+      date: {
+        type: Date,
+        default: () => new Date().setHours(0,0,0,0)
+    },
+
     breakfast: [
         {
             item: {
@@ -44,6 +51,8 @@ const foodSchema = new mongoose.Schema({
         },
     ],
 },{timestamps: true});
+
+foodSchema.index({ user: 1, date: 1 }, { unique: true });
 
 const Food = mongoose.model("UserDietDiary", foodSchema);
 
