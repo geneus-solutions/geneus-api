@@ -88,7 +88,7 @@ const updateDetail = async (req, res) => {
     } = req.body;
     console.log('this is data', req.body)
     const userExists = await User.findById(userId);
-
+      console.log('this is userExists', userExists)
     if (!userExists) {
       res.status(404).json({ message: "User not found" });
       return;
@@ -134,11 +134,13 @@ const updateDetail = async (req, res) => {
       "Lose Weight": -500,
       "Maintain Weight": 0,
       "Gain Weight": 500,
+      "Gain Muscle": 300,
+      "Manage Stress": 0,
+      "Athletic Performance": 200
     }[goal];
 
     const tdee = bmi * activityFactor + goalMultiplier;
     const calories = Math.round(tdee);
-
     const detailExists = await Details.findOne({ userId:userId });
 
     if (!detailExists) {

@@ -23,8 +23,20 @@ const ItemSchema = new mongoose.Schema({
     },
     servingSize : {
         type : String
+    },
+
+    // add two more fields:-
+    createdBy: {
+        type: String,
+        enum: ["admin", "scan"],
+        default: "admin"
+    },
+
+    isVerified: {
+        type: Boolean,
+        default: true // admin = true, scan = false
     }
-})
+}, {timestamps: true})
 
 const Item = mongoose.model('FoodItem', ItemSchema);
 
