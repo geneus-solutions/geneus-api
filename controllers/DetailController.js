@@ -138,7 +138,6 @@ const updateDetail = async (req, res) => {
       "Manage Stress": 0,
       "Athletic Performance": 200
     }[goal];
-    console.log('this is goal', goal)
 
     const tdee = bmi * activityFactor + goalMultiplier;
     const calories = Math.round(tdee);
