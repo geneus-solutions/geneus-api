@@ -22,7 +22,7 @@ export const scanFood = catchAsync(async (req, res) => {
   const imageBase64 = req.file.buffer.toString("base64");
 
   // 2️ Hash image
-  const imageHash = hashImage(imageBxase64);
+  const imageHash = hashImage(imageBase64);
 
   // 3️ Cache check
   const cachedMeal = await findScannedMealByHash(imageHash);
