@@ -26,6 +26,16 @@ const ItemSchema = new mongoose.Schema({
     },
 
     // add two more fields:-
+
+    ingredients: [
+        {
+            type: String,
+        }
+    ],
+    description: {
+        type: String,
+    },
+    
     createdBy: {
         type: String,
         enum: ["admin", "scan"],

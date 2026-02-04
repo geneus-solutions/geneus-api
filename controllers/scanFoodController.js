@@ -58,6 +58,8 @@ export const scanFood = catchAsync(async (req, res) => {
         carbs: nutrition.carbs,
         fat: nutrition.fat,
         servingSize: nutrition.servingSize,
+        ingredients: nutrition.ingredients || [],
+        description: nutrition.description || "",
         createdBy: "scan",
         isVerified: false,
       });

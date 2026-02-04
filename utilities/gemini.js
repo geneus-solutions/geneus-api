@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 
 //  Vision: Detect food items from image
@@ -49,7 +49,9 @@ Return ONLY valid JSON:
   "protein": number,
   "carbs": number,
   "fat": number,
-  "servingSize": "string"
+  "servingSize": "string",
+  “ingredients”: [“ingred 1”,“ingred 2”],
+  “description”: “Short description of what this food is”
 }
 `;
 
