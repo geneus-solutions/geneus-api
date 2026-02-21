@@ -1,401 +1,388 @@
-import Food from '../models/Food.js';
-import User from '../models/User.js';
-import mongoose from 'mongoose';
-import { configDotenv } from 'dotenv';
-import { findOrCreateFood } from '../services/foodItemServices/foodOrCreateFood.js';
+import Food from "../models/Food.js";
+import User from "../models/User.js";
+import mongoose from "mongoose";
+import { configDotenv } from "dotenv";
+import { findOrCreateFood } from "../services/foodItemServices/foodOrCreateFood.js";
+import Item from "../models/FoodItems.js";
+import { getGeminiNutrition } from "../utilities/gemini.js";
 
-configDotenv()
-// const postFood =  async (req, res) => {
-  
-//   try {
-//         const { userId } = req.user; // Extract userId from the request
-//         console.log('this is userId', userId);
-//         const { breakfast, lunch, dinner } = req.body;
-//         const userExists = await User.findById(userId);
+configDotenv();
 
-//         if (!userExists) {
-//           return res.status(404).json({ message: "User not found" });
-//         }
-
-//         const currentDate = new Date();
-//         const dateFormat = currentDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-
-//         const startOfDay = new Date(dateFormat); // Midnight of the day
-//         const endOfDay = new Date(dateFormat);
-//         endOfDay.setDate(endOfDay.getDate() + 1); // Midnight of next day
-
-//         let foodData = await Food.findOne({ user:userId,createdAt: { $gte: startOfDay,$lt: endOfDay}});
-
-//         // console.log("foodData post : ", foodData)
-
-//         const formatItems = (mealItems) => {
-//           if (!mealItems) return [];
-//           if (Array.isArray(mealItems)) {
-//               return mealItems.map(item => ({ item, quantity: 1 }));
-//           }
-//           return [{ item: mealItems, quantity: 1 }];
-//         };
-
-//         if (foodData) {
-//             if (breakfast) {
-//                 const formattedBreakfast = formatItems(breakfast);
-//                 formattedBreakfast.forEach(newItem => {
-//                     const existingItem = foodData.breakfast.find(item => item.item.toString() === newItem.item);
-//                     if (existingItem) {
-//                         existingItem.quantity += newItem.quantity;
-//                     } else {
-//                         foodData.breakfast.push(newItem);
-//                     }
-//                 });
-//             }
-
-//             if (lunch) {
-
-//               const formattedLunch = formatItems(lunch);
-
-//               formattedLunch.forEach(newItem => {
-//                 const existingItem = foodData.lunch.find(item => item.item.toString() === newItem.item);
-//                 if (existingItem) {
-//                     existingItem.quantity += newItem.quantity;
-//                 } else {
-//                     foodData.lunch.push(newItem);
-//                 }
-//               });
-              
-//             }
-
-//             if (dinner) {
-//                 const formattedDinner = formatItems(dinner);
-//                 formattedDinner.forEach(newItem => {
-//                     const existingItem = foodData.dinner.find(item => item.item.toString() === newItem.item);
-//                     if (existingItem) {
-//                         existingItem.quantity += newItem.quantity;
-//                     } else {
-//                         foodData.dinner.push(newItem);
-//                     }
-//                 });
-//             }
-
-//             const updatedFood = await foodData.save();
-//             console.log('this is updated Food', updatedFood);
-
-//             return res.status(200).json(updatedFood);
-
-//         } else {
-//             const newFood = new Food({
-//                 user:userId,
-//                 breakfast: formatItems(breakfast),
-//                 lunch: formatItems(lunch),
-//                 dinner: formatItems(dinner)
-//             });
-
-//             await newFood.save();
-//             return res.status(201).json(newFood);
-//         }
-//     } catch (error) {
-//         return res.status(500).json({ message: error.message });
-//     }
-// }
-
-const postFood = async (req, res) => {
+const addFoodToDiary = async (req, res) => {
   try {
     const { userId } = req.user;
-    const { breakfast, lunch, dinner } = req.body;
+    let { mealName, food, date } = req.body;
 
-    // ----- 1. Check user -----
-    if (!mongoose.isValidObjectId(userId)) {
-      return res.status(400).json({ message: "Invalid user" });
+    if (!mealName) {
+      return res.status(400).json({ message: "Meal name is required" });
     }
 
-    const userExists = await User.findById(userId);
-    if (!userExists) {
-      return res.status(404).json({ message: "User not found" });
+    // Always keep date string
+    const selectedDate = date || new Date().toISOString().split("T")[0];
+
+    //  Atomic upsert (VERY IMPORTANT)
+    let diary = await Food.findOneAndUpdate(
+      { user: userId, foodDate: selectedDate },
+      { $setOnInsert: { user: userId, foodDate: selectedDate, meals: [] } },
+      { new: true, upsert: true }
+    );
+
+    //  Find or create meal
+    let meal = diary.meals.find(
+      (m) => m.mealName.toLowerCase() === mealName.toLowerCase()
+    );
+
+    if (!meal) {
+      diary.meals.push({
+        mealName,
+        items: [],
+      });
+      meal = diary.meals[diary.meals.length - 1];
     }
 
-    // ----- 2. Get today's IST date -----
-    const now = new Date();
+    /* ------------------------------------------------ */
+    /* CASE A : USER CUSTOM FOOD                        */
+    /* ------------------------------------------------ */
 
-    const startOfDay = new Date(now);
-    startOfDay.setHours(0, 0, 0, 0);
+    if (typeof food === "object" && food.calories !== undefined) {
 
-    const endOfDay = new Date(now);
-    endOfDay.setHours(23, 59, 59, 999);
+      const existingCustom = meal.items.find(
+        (m) =>
+          m.customFood &&
+          m.customFood.name &&
+          m.customFood.name.toLowerCase() === (food.name || "").toLowerCase()
+      );
 
-    // ----- 3. Find today's food log -----
-    let foodData = await Food.findOne({
-      user: userId,
-      date: { $gte: startOfDay, $lte: endOfDay }
-    });
+      if (existingCustom) {
+        existingCustom.quantity += 1;
+      } else {
+        meal.items.push({
+          customFood: {
+            name: food.name,
+            calories: food.calories,
+            protein: food.protein,
+            carbs: food.carbs,
+            fat: food.fat,
+            servingSize: food.servingSize || "1 serving",
+          },
+          quantity: 1,
+        });
+      }
+    }
 
-    // ----- 4. Convert food names -> itemIds -----
-    const formatItems = async (mealItems) => {
-      if (!mealItems) return [];
+    /* ------------------------------------------------ */
+    /* CASE B : FOOD NAME → DB → AI                     */
+    /* ------------------------------------------------ */
 
-      const itemsArray = Array.isArray(mealItems) ? mealItems : [mealItems];
-      const formatted = [];
+    else {
 
-      for (const foodName of itemsArray) {
-        const itemId = await findOrCreateFood(foodName);
+      const foodName = typeof food === "string" ? food : food.name;
 
-        formatted.push({
-          item: itemId,
-          quantity: 1
+      if (!foodName) {
+        return res.status(400).json({ message: "Food name missing" });
+      }
+
+      let foodItem = await Item.findOne({
+        name: new RegExp(`^${foodName}$`, "i"),
+      });
+
+      // Not found → call AI
+      if (!foodItem) {
+        const aiNutrition = await getGeminiNutrition(foodName);
+
+        foodItem = await Item.create({
+          name: foodName,
+          calories: aiNutrition.calories,
+          protein: aiNutrition.protein,
+          carbs: aiNutrition.carbs,
+          fat: aiNutrition.fat,
+          servingSize: aiNutrition.servingSize || "1 serving",
+          source: "ai",
         });
       }
 
-      return formatted;
-    };
+      const existingItem = meal.items.find(
+        (m) => m.item && m.item.equals(foodItem._id)
+      );
 
-    const formattedBreakfast = await formatItems(breakfast);
-    const formattedLunch = await formatItems(lunch);
-    const formattedDinner = await formatItems(dinner);
-
-    // ----- 5. If record exists → update -----
-    if (foodData) {
-
-      const mergeMeal = (existingMeal, newMeal) => {
-        newMeal.forEach(newItem => {
-          const existingItem = existingMeal.find(item =>
-            item.item.equals(newItem.item)
-          );
-
-          if (existingItem) {
-            existingItem.quantity += 1;
-          } else {
-            existingMeal.push(newItem);
-          }
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        meal.items.push({
+          item: foodItem._id,
+          quantity: 1,
         });
-      };
-
-      if (formattedBreakfast.length)
-        mergeMeal(foodData.breakfast, formattedBreakfast);
-
-      if (formattedLunch.length)
-        mergeMeal(foodData.lunch, formattedLunch);
-
-      if (formattedDinner.length)
-        mergeMeal(foodData.dinner, formattedDinner);
-
-      await foodData.save();
-
-      return res.status(200).json({
-        message: "Food updated successfully",
-        food: foodData
-      });
+      }
     }
 
-    // ----- 6. If no record → create -----
-    const newFood = await Food.create({
-      user: userId,
-      date: startOfDay,
-      breakfast: formattedBreakfast,
-      lunch: formattedLunch,
-      dinner: formattedDinner
-    });
+    await diary.save();
 
-    return res.status(201).json({
+    res.status(200).json({
       message: "Food added successfully",
-      food: newFood
+      diary,
     });
 
   } catch (error) {
-    console.error("postFood Error:", error);
-    return res.status(500).json({ message: error.message });
+    console.error("Add Food Error:", error);
+    res.status(500).json({ message: error.message });
   }
 };
- 
-const getFoodById =  async (req, res) => {
-  
+
+
+const getFoodById = async (req, res) => {
   try {
+    const { id } = req.params;
+    const { date } = req.query;
 
-        const { id } = req.params;
-        const { date } = req.query; // Extract date from query parameters
-        console.log('this is date', date)
-        if (!mongoose.isValidObjectId(id)) {
-            return res.status(400).json({ message: "Invalid user ID" });
-        }
-
-        const Today = date ? new Date(date) : new Date();
-        const dateFormat = Today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-        const startOfDay = new Date(dateFormat); // Midnight of the day
-        const endOfDay = new Date(dateFormat);
-        endOfDay.setDate(endOfDay.getDate() + 1); // Midnight of next day
-     
-        const foodData = await Food.findOne({ user: id ,createdAt: { $gte: startOfDay,$lt: endOfDay}})
-            .populate('user', '_id name mobile food')  
-            .populate('breakfast.item')  
-            .populate('lunch.item')     
-            .populate('dinner.item')
-            .lean();    
-
-        if (!foodData) {
-          const user = await User.findById(id, { _id: 1, name: 1, mobile: 1 , food: 1 });
-            return res.status(200).json({ 
-              user: user,
-              breakfast: [],
-              lunch: [],
-              dinner: [],
-              snacks: [],
-              totalCalories:0,
-              totalProtein : 0,
-              totalCarbs : 0,
-              totalFat : 0
-             });
-        }
-
-        let totalCalories = 0;
-        let totalProtein = 0;
-        let totalCarbs = 0;
-        let totalFat = 0;
-
-     
-        const calculateNutrients = (mealItems) => {
-            return mealItems.reduce((total, meal) => {
-                const quantity = meal.quantity || 1;
-                return {
-                    calories: total.calories + (meal.item.calories || 0) * quantity,
-                    protein: total.protein + (meal.item.protein || 0) * quantity,
-                    carbs: total.carbs + (meal.item.carbs || 0) * quantity,
-                    fat: total.fat + (meal.item.fat || 0) * quantity
-                };
-            }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
-        };
-
-       
-        const meals = ['breakfast', 'lunch', 'dinner'];
-        meals.forEach(meal => {
-            if (foodData[meal]) {
-                const mealNutrients = calculateNutrients(foodData[meal]);
-                totalCalories += mealNutrients.calories;
-                totalProtein += mealNutrients.protein;
-                totalCarbs += mealNutrients.carbs;
-                totalFat += mealNutrients.fat;
-            }
-        });
-
-        const responseData = {
-
-          ...foodData, 
-          totalCalories,
-          totalProtein : Math.round(totalProtein),
-          totalCarbs : Math.round(totalCarbs),
-          totalFat : Math.round(totalFat)
-
-        };
-        return res.status(200).json(responseData);
-    } catch (error) {
-        console.error("Error fetching food data:", error);
-        return res.status(500).json({ message: "Internal server error" });
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
     }
-}
+
+    // YYYY-MM-DD
+    const selectedDate =
+      date || new Date().toISOString().split("T")[0];
+
+    console.log("Fetching diary for:", selectedDate);
+
+    /* ---------------- FIND DIARY ---------------- */
+
+    const diary = await Food.findOne({
+      user: id,
+      foodDate: selectedDate,
+    })
+      .populate("user", "_id name mobile food")
+      .populate("meals.items.item") // ⭐ IMPORTANT
+      .lean();
+
+    /* ---------- NO DIARY FOUND ---------- */
+
+    if (!diary) {
+      const user = await User.findById(id, {
+        _id: 1,
+        name: 1,
+        mobile: 1,
+        food: 1,
+      });
+
+      return res.status(200).json({
+        user,
+        meals: [],
+        totalCalories: 0,
+        totalProtein: 0,
+        totalCarbs: 0,
+        totalFat: 0,
+      });
+    }
+
+    /* ---------- NUTRIENT CALCULATION ---------- */
+
+    let totalCalories = 0;
+    let totalProtein = 0;
+    let totalCarbs = 0;
+    let totalFat = 0;
+
+    const mealsWithNutrition = diary.meals.map((meal) => {
+      let mealCalories = 0;
+      let mealProtein = 0;
+      let mealCarbs = 0;
+      let mealFat = 0;
+
+      const items = meal.items.map((item) => {
+        const quantity = item.quantity || 1;
+
+        // choose source (global OR custom)
+        const source = item.item || item.customFood;
+
+        const calories = (source?.calories || 0) * quantity;
+        const protein = (source?.protein || 0) * quantity;
+        const carbs = (source?.carbs || 0) * quantity;
+        const fat = (source?.fat || 0) * quantity;
+
+        mealCalories += calories;
+        mealProtein += protein;
+        mealCarbs += carbs;
+        mealFat += fat;
+
+        return {
+          ...item,
+          calculated: {
+            calories,
+            protein,
+            carbs,
+            fat,
+          },
+        };
+      });
+
+      // add to total day nutrition
+      totalCalories += mealCalories;
+      totalProtein += mealProtein;
+      totalCarbs += mealCarbs;
+      totalFat += mealFat;
+
+      return {
+        mealName: meal.mealName,
+        items,
+        mealNutrition: {
+          calories: Math.round(mealCalories),
+          protein: Math.round(mealProtein),
+          carbs: Math.round(mealCarbs),
+          fat: Math.round(mealFat),
+        },
+      };
+    });
+
+    /* ---------- FINAL RESPONSE ---------- */
+
+    return res.status(200).json({
+      user: diary.user,
+      foodDate: diary.foodDate,
+      meals: mealsWithNutrition,
+      totalCalories: Math.round(totalCalories),
+      totalProtein: Math.round(totalProtein),
+      totalCarbs: Math.round(totalCarbs),
+      totalFat: Math.round(totalFat),
+    });
+
+  } catch (error) {
+    console.error("Error fetching food data:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 const updateFood = async (req, res) => {
-  
   try {
-    
-      const { userId } = req.user; 
-      const { meal, quantity, id } = req.body;
-      console.log('this is userId from updateFood', userId);
-      console.log('this is body update foor', req.body)
-      const Today = new Date();
-        const dateFormat = Today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-        const startOfDay = new Date(dateFormat); // Midnight of the day
-        const endOfDay = new Date(dateFormat);
-        endOfDay.setDate(endOfDay.getDate() + 1); // Midnight of next day
+    const { userId } = req.user;
+    const { id, mealName, quantity, date } = req.body;
 
-      let userMeals = await Food.findOne({ user: userId,createdAt: { $gte: startOfDay,$lt: endOfDay}});
-      
-      if (!userMeals) {
-        return res.status(404).json({ message: 'User meal data not found' });
-      }
+    const selectedDate =
+      date || new Date().toISOString().split("T")[0];
 
-      const findAndRemoveMealItem = (mealArray) => {
-        const index = mealArray.findIndex(item => item._id.toString() === id);
-        if (index !== -1) {
-          const mealItem = mealArray.splice(index, 1)[0]; 
-          return mealItem;
-        }
-        return null;
-      };
-  
-      let mealItem;
-  
-      mealItem = findAndRemoveMealItem(userMeals.breakfast);
-      if (!mealItem) mealItem = findAndRemoveMealItem(userMeals.lunch);
-      if (!mealItem) mealItem = findAndRemoveMealItem(userMeals.dinner);
-  
-      if (!mealItem) {
-        return res.status(404).json({ message: 'Meal item not found' });
-      }
-  
-      if (quantity && quantity !== mealItem.quantity) {
-        mealItem.quantity = quantity;
-      }
-  
-      if (meal === 'Breakfast') {
-        userMeals.breakfast.push(mealItem);
-      } else if (meal === 'Lunch') {
-        userMeals.lunch.push(mealItem);
-      } else if (meal === 'Dinner') {
-        userMeals.dinner.push(mealItem);
-      } else {
-        return res.status(400).json({ message: 'Invalid meal type' });
-      }
-  
-      await userMeals.save();
-      return res.status(200).json({ message: 'Meal updated successfully', userMeals });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Server error' });
+    // Find diary
+    const diary = await Food.findOne({
+      user: userId,
+      foodDate: selectedDate,
+    });
+
+    if (!diary) {
+      return res.status(404).json({ message: "Diary not found" });
     }
-  }
 
-  const removeFood = async (req, res) => {
-    
-    try {
-      const { userId } = req.user; 
-      const { id } = req.body; 
-      console.log('this is body from remove Food-->', req.body)
-      const Today = new Date();
-        const dateFormat = Today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-        const startOfDay = new Date(dateFormat); // Midnight of the day
-        const endOfDay = new Date(dateFormat);
-        endOfDay.setDate(endOfDay.getDate() + 1); // Midnight of next day
+    let foundItem = null;
+    let oldMealIndex = -1;
 
-      let userMeals = await Food.findOne({ user: userId,createdAt: { $gte: startOfDay,$lt: endOfDay}}); 
+    // Find item inside all meals
+    for (let i = 0; i < diary.meals.length; i++) {
+      const itemIndex = diary.meals[i].items.findIndex(
+        (it) => it._id.toString() === id
+      );
 
-      if (!userMeals) {
-        return res.status(404).json({ message: 'User meal data not found' });
-      }  
-      const findAndRemoveMealItem = (mealArray) => {
-        const index = mealArray.findIndex(item => item._id.toString() === id);
-        if (index !== -1) {
-          const mealItem = mealArray.splice(index, 1)[0]; 
-          return mealItem;
-        }
-        return null;
-      };  
-      let mealItem;
-       mealItem = findAndRemoveMealItem(userMeals.breakfast) ||
-                 findAndRemoveMealItem(userMeals.lunch) ||
-                 findAndRemoveMealItem(userMeals.dinner);
-  
-      if (!mealItem) {
-        return res.status(404).json({ message: 'Meal item not found' });
-      }      
-      await userMeals.save();
-  
-      return res.status(200).json({ message: 'Meal updated successfully', userMeals });
-    } catch (error) {
-      console.error('Error in removeFood controller:', error);
-      return res.status(500).json({ message: 'Server error' });
+      if (itemIndex !== -1) {
+        foundItem = diary.meals[i].items[itemIndex];
+        diary.meals[i].items.splice(itemIndex, 1);
+        oldMealIndex = i;
+        break;
+      }
     }
-  };
-  
 
-  export {
-    getFoodById,
-    postFood,
-    updateFood,
-    removeFood
+    if (!foundItem) {
+      return res.status(404).json({ message: "Food item not found" });
+    }
+
+    // Update quantity
+    if (quantity && quantity > 0) {
+      foundItem.quantity = quantity;
+    }
+
+    // Find / create new meal
+    let targetMeal = diary.meals.find(
+      (m) => m.mealName.toLowerCase() === mealName.toLowerCase()
+    );
+
+    if (!targetMeal) {
+      diary.meals.push({
+        mealName,
+        items: [],
+      });
+      targetMeal = diary.meals[diary.meals.length - 1];
+    }
+
+    // Push item
+    targetMeal.items.push(foundItem);
+
+    await diary.save();
+
+    return res.status(200).json({
+      message: "Food updated successfully",
+      diary,
+    });
+  } catch (error) {
+    console.error("Update Food Error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
+};
+
+const removeFood = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { id, date } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: "Food item id is required" });
+    }
+
+    // use provided date or today
+    const selectedDate =
+      date || new Date().toISOString().split("T")[0];
+
+    // find diary
+    const diary = await Food.findOne({
+      user: userId,
+      foodDate: selectedDate,
+    });
+
+    if (!diary) {
+      return res.status(404).json({ message: "Diary not found" });
+    }
+
+    let itemRemoved = false;
+
+    // find item inside meals
+    for (let i = 0; i < diary.meals.length; i++) {
+      const meal = diary.meals[i];
+
+      const itemIndex = meal.items.findIndex(
+        (item) => item._id.toString() === id
+      );
+
+      if (itemIndex !== -1) {
+        // remove the food item
+        meal.items.splice(itemIndex, 1);
+        itemRemoved = true;
+
+        // IMPORTANT: if meal has no items -> remove meal also
+        if (meal.items.length === 0) {
+          diary.meals.splice(i, 1);
+        }
+
+        break;
+      }
+    }
+
+    if (!itemRemoved) {
+      return res.status(404).json({ message: "Food item not found" });
+    }
+
+    await diary.save();
+
+    return res.status(200).json({
+      message: "Food removed successfully",
+      diary,
+    });
+  } catch (error) {
+    console.error("Remove Food Error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export { getFoodById, addFoodToDiary, updateFood, removeFood };

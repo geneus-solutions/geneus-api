@@ -1,59 +1,74 @@
 import mongoose from "mongoose";
 
-const foodSchema = new mongoose.Schema({
+/* ---------- Food inside a meal ---------- */
+const mealItemSchema = new mongoose.Schema(
+  {
+    // Reference to global DB food
+    item: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "FoodItem",
+      default: null,
+    },
+
+    // Custom user-only food
+    customFood: {
+      name: String,
+      calories: Number,
+      protein: Number,
+      carbs: Number,
+      fat: Number,
+      servingSize: String,
+    },
+
+    quantity: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+  },
+  { _id: true }
+);
+
+/* ---------- Meal (Dynamic) ---------- */
+const mealSchema = new mongoose.Schema(
+  {
+    // USER CAN CREATE ANY MEAL NAME
+    mealName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    items: [mealItemSchema],
+  },
+  { _id: true }
+);
+
+/* ---------- Diary ---------- */
+const userDietDiarySchema = new mongoose.Schema(
+  {
     user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
 
-    //add date field:-
-      date: {
-        type: Date,
-        default: () => new Date().setHours(0,0,0,0)
+    // String date removes timezone problems
+    // Example: "2026-02-16"
+    foodDate: {
+      type: String,
+      required: true,
     },
 
-    breakfast: [
-        {
-            item: {
-                type: mongoose.Schema.Types.ObjectId,
+    // Dynamic meals
+    meals: [mealSchema],
+  },
+  { timestamps: true }
+);
 
-                ref: "FoodItem",
-            },
-            quantity: {
-                type: Number,
-                default: 1,
-            },
-        },
-    ],
-    lunch: [
-        {
-            item: {
-                type: mongoose.Schema.Types.ObjectId,
+// One diary per user per day
+userDietDiarySchema.index({ user: 1, foodDate: 1 }, { unique: true });
 
-                ref: "FoodItem",
-            },
-            quantity: {
-                type: Number,
-                default: 1,
-            },
-        },
-    ],
-    dinner: [
-        {
-            item: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "FoodItem",
-            },
-            quantity: {
-                type: Number,
-                default: 1,
-            },
-        },
-    ],
-},{timestamps: true});
-
-foodSchema.index({ user: 1, date: 1 }, { unique: true });
-
-const Food = mongoose.model("UserDietDiary", foodSchema);
+const Food = mongoose.model("UserDietDiary", userDietDiarySchema);
 
 export default Food;
