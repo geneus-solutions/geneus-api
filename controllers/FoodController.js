@@ -11,8 +11,10 @@ configDotenv();
 const addFoodToDiary = async (req, res) => {
   try {
     const { userId } = req.user;
-    let { mealName, food, date } = req.body;
-
+    let { mealName, food, date, quantity } = req.body;
+    quantity = Number(quantity) || 1;
+    if (quantity < 1) quantity = 1;
+    if (quantity > 1000) quantity = 1000;
     if (!mealName) {
       return res.status(400).json({ message: "Meal name is required" });
     }
@@ -24,12 +26,12 @@ const addFoodToDiary = async (req, res) => {
     let diary = await Food.findOneAndUpdate(
       { user: userId, foodDate: selectedDate },
       { $setOnInsert: { user: userId, foodDate: selectedDate, meals: [] } },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     );
 
     //  Find or create meal
     let meal = diary.meals.find(
-      (m) => m.mealName.toLowerCase() === mealName.toLowerCase()
+      (m) => m.mealName.toLowerCase() === mealName.toLowerCase(),
     );
 
     if (!meal) {
@@ -45,16 +47,15 @@ const addFoodToDiary = async (req, res) => {
     /* ------------------------------------------------ */
 
     if (typeof food === "object" && food.calories !== undefined) {
-
       const existingCustom = meal.items.find(
         (m) =>
           m.customFood &&
           m.customFood.name &&
-          m.customFood.name.toLowerCase() === (food.name || "").toLowerCase()
+          m.customFood.name.toLowerCase() === (food.name || "").toLowerCase(),
       );
 
       if (existingCustom) {
-        existingCustom.quantity += 1;
+        existingCustom.quantity += quantity;
       } else {
         meal.items.push({
           customFood: {
@@ -65,17 +66,13 @@ const addFoodToDiary = async (req, res) => {
             fat: food.fat,
             servingSize: food.servingSize || "1 serving",
           },
-          quantity: 1,
+          quantity: quantity,
         });
       }
-    }
-
-    /* ------------------------------------------------ */
-    /* CASE B : FOOD NAME → DB → AI                     */
-    /* ------------------------------------------------ */
-
-    else {
-
+    } else {
+      /* ------------------------------------------------ */
+      /* CASE B : FOOD NAME → DB → AI                     */
+      /* ------------------------------------------------ */
       const foodName = typeof food === "string" ? food : food.name;
 
       if (!foodName) {
@@ -102,15 +99,15 @@ const addFoodToDiary = async (req, res) => {
       }
 
       const existingItem = meal.items.find(
-        (m) => m.item && m.item.equals(foodItem._id)
+        (m) => m.item && m.item.equals(foodItem._id),
       );
 
       if (existingItem) {
-        existingItem.quantity += 1;
+        existingItem.quantity += quantity;
       } else {
         meal.items.push({
           item: foodItem._id,
-          quantity: 1,
+          quantity: quantity,
         });
       }
     }
@@ -121,13 +118,11 @@ const addFoodToDiary = async (req, res) => {
       message: "Food added successfully",
       diary,
     });
-
   } catch (error) {
     console.error("Add Food Error:", error);
     res.status(500).json({ message: error.message });
   }
 };
-
 
 const getFoodById = async (req, res) => {
   try {
@@ -139,8 +134,7 @@ const getFoodById = async (req, res) => {
     }
 
     // YYYY-MM-DD
-    const selectedDate =
-      date || new Date().toISOString().split("T")[0];
+    const selectedDate = date || new Date().toISOString().split("T")[0];
 
     console.log("Fetching diary for:", selectedDate);
 
@@ -243,7 +237,6 @@ const getFoodById = async (req, res) => {
       totalCarbs: Math.round(totalCarbs),
       totalFat: Math.round(totalFat),
     });
-
   } catch (error) {
     console.error("Error fetching food data:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -255,8 +248,7 @@ const updateFood = async (req, res) => {
     const { userId } = req.user;
     const { id, mealName, quantity, date } = req.body;
 
-    const selectedDate =
-      date || new Date().toISOString().split("T")[0];
+    const selectedDate = date || new Date().toISOString().split("T")[0];
 
     // Find diary
     const diary = await Food.findOne({
@@ -274,7 +266,7 @@ const updateFood = async (req, res) => {
     // Find item inside all meals
     for (let i = 0; i < diary.meals.length; i++) {
       const itemIndex = diary.meals[i].items.findIndex(
-        (it) => it._id.toString() === id
+        (it) => it._id.toString() === id,
       );
 
       if (itemIndex !== -1) {
@@ -296,7 +288,7 @@ const updateFood = async (req, res) => {
 
     // Find / create new meal
     let targetMeal = diary.meals.find(
-      (m) => m.mealName.toLowerCase() === mealName.toLowerCase()
+      (m) => m.mealName.toLowerCase() === mealName.toLowerCase(),
     );
 
     if (!targetMeal) {
@@ -332,8 +324,7 @@ const removeFood = async (req, res) => {
     }
 
     // use provided date or today
-    const selectedDate =
-      date || new Date().toISOString().split("T")[0];
+    const selectedDate = date || new Date().toISOString().split("T")[0];
 
     // find diary
     const diary = await Food.findOne({
@@ -352,7 +343,7 @@ const removeFood = async (req, res) => {
       const meal = diary.meals[i];
 
       const itemIndex = meal.items.findIndex(
-        (item) => item._id.toString() === id
+        (item) => item._id.toString() === id,
       );
 
       if (itemIndex !== -1) {
