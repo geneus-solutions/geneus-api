@@ -1,5 +1,7 @@
 import Certificate from "../models/Certificate.js";
+import eventBus from "../utilities/createEvent.js";
 import { generateCertificatePDF } from "../utilities/generateCertificatePDF.js";
+import "../listeners/certificate.listener.js"; 
 
 export const generateCertificate = async (req, res) => {
   try {
@@ -8,7 +10,7 @@ export const generateCertificate = async (req, res) => {
 
     const certificateId = await generateCertificateId();
 
-    const certificate = await Certificate.create({
+    await Certificate.create({
       certificate_id: certificateId,
       employee_name,
       employee_email,
@@ -18,17 +20,32 @@ export const generateCertificate = async (req, res) => {
       generated_date: new Date(),
     });
 
-    generateCertificatePDF(
-      {
-        certificateId,
-        employeeName: employee_name,
-        startDate: start_date,
-        endDate: end_date,
-        issueDate: new Date(),
-        description: role,
-      },
-      res
+    const pdfBuffer = await generateCertificatePDF({
+      certificateId,
+      employeeName: employee_name,
+      startDate: start_date,
+      endDate: end_date,
+      issueDate: new Date(),
+      description: role,
+    });
+
+    // const fileName = `${employee_name.replace(/\s+/g, "_")}_Experience_Certificate.pdf`;
+
+    /* send PDF to browser */
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${employee_name}_certificate.pdf`
     );
+
+    res.send(pdfBuffer);
+    /* Event Emitt */
+    eventBus.emit("certificate.generated", {
+      employee_name,
+      employee_email,
+      pdfBuffer,
+    });
+
   } catch (error) {
     console.error(error);
 
