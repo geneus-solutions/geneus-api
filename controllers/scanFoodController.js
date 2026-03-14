@@ -2,15 +2,21 @@ import crypto from "crypto";
 import catchAsync from "../utilities/catchAsync.js";
 import ApiError from "../utilities/ApiError.js";
 
-import { getGeminiVisionResult, getGeminiNutrition } from "../utilities/gemini.js";
-import { createScannedMeal, findScannedMealByHash } from "../services/scanMealServices/scanMeal.service.js";
-import { createFoodItem, findFoodByName } from "../services/foodItemServices/foodItem.service.js";
+import {
+  getGeminiVisionResult,
+  getGeminiNutrition,
+} from "../utilities/gemini.js";
+import {
+  createScannedMeal,
+  findScannedMealByHash,
+} from "../services/scanMealServices/scanMeal.service.js";
+import {
+  createFoodItem,
+  findFoodByName,
+} from "../services/foodItemServices/foodItem.service.js";
 
-function hashImage(imageBase64){
-    return crypto
-    .createHash("sha256")
-    .update(imageBase64)
-    .digest("hex");
+function hashImage(imageBase64) {
+  return crypto.createHash("sha256").update(imageBase64).digest("hex");
 }
 
 export const scanFood = catchAsync(async (req, res) => {
@@ -25,14 +31,22 @@ export const scanFood = catchAsync(async (req, res) => {
   const imageHash = hashImage(imageBase64);
 
   // 3️ Cache check
-  const cachedMeal = await findScannedMealByHash(imageHash);
+  const cachedMeal =
+    await findScannedMealByHash(imageHash).populate("items.foodId");
+  console.log("this is cachedMeal", cachedMeal);
   if (cachedMeal) {
+    const items = cachedMeal.items.map((item) => ({
+      ...item.foodId.toObject(),
+      quantity: item.quantity,
+      totalCalories: item.foodId.calories * item.quantity,
+    }));
+
     return res.status(200).json({
       success: true,
       source: "cache",
       summary: cachedMeal.summary,
       totalCalories: cachedMeal.totalCalories,
-      items: cachedMeal.items,
+      items,
     });
   }
 
@@ -46,13 +60,14 @@ export const scanFood = catchAsync(async (req, res) => {
 
   // 5️ Process foods
   for (const foodName of visionResult.items) {
-    let food = await findFoodByName(foodName);
+    const { name, quantity } = foodName;
+    let food = await findFoodByName(name);
 
     if (!food) {
-      const nutrition = await getGeminiNutrition(foodName);
+      const nutrition = await getGeminiNutrition(name);
 
       food = await createFoodItem({
-        name: foodName,
+        name: name,
         calories: nutrition.calories,
         protein: nutrition.protein,
         carbs: nutrition.carbs,
@@ -65,19 +80,26 @@ export const scanFood = catchAsync(async (req, res) => {
       });
     }
 
-    detectedItems.push(food);
+    detectedItems.push({
+      ...food.toObject(),
+      quantity,
+      totalCalories: food.calories * quantity,
+    });
   }
 
   // 6 Calculate calories
   const totalCalories = detectedItems.reduce(
-    (sum, item) => sum + (item.calories || 0),
-    0
+    (sum, item) => sum + (item.totalCalories || 0),
+    0,
   );
 
   // 7️ Save scan cache
   const scannedMeal = await createScannedMeal({
     imageHash,
-    items: detectedItems.map((i) => i._id),
+    items: detectedItems.map((i) => ({
+      foodId: i._id,
+      quantity: i.quantity,
+    })),
     summary: visionResult.summary,
     totalCalories,
   });
