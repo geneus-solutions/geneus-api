@@ -12,8 +12,18 @@ Identify all distinct food items in this image.
 Return ONLY valid JSON in the following format:
 
 {
-  "items": ["Food name 1", "Food name 2"],
-  "summary": "Short description of the meal"
+  "items": [
+    {
+      "name": "Food name 1",
+      "quantity": number,
+    }, 
+    {
+      "name": "Food name 2",
+      "quantity": number,
+    }, 
+    
+    ],
+  "summary": "Brief description focusing ONLY on the food (e.g., 'Medium size orange', 'Chicken salad with cucumber slices "
 }
 
 If the image does not contain food, return:
